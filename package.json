@@ -1,0 +1,43 @@
+{
+  "name": "libel-platform-server",
+  "version": "2.0.1",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node src/server.js",
+    "dev": "cross-env NODE_ENV=development nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/storage": "^6.4.1",
+    "axios": "^0.27.2",
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "moment-timezone": "^0.5.34",
+    "mongoose": "^6.5.2",
+    "mongoose-sequence": "^5.3.1",
+    "multer": "^1.4.5-lts.1",
+    "node-schedule": "^2.1.0",
+    "nodemailer": "^6.7.8",
+    "nodemailer-express-handlebars": "^5.0.0",
+    "optimist": "^0.5.2",
+    "passport": "^0.6.0",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth20": "^2.0.0",
+    "request": "^2.88.2",
+    "unique-username-generator": "^1.1.1",
+    "url-slug": "^3.0.4",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.19"
+  }
+}
