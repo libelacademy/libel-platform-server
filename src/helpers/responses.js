@@ -1,4 +1,4 @@
-const { production, frontend } = require('../config');
+const { frontend } = require('../config');
 
 const success = (res, data, message, code = 200) => {
   res.status(code).json({
@@ -13,8 +13,8 @@ const successLogin = async (res, data, token ) => {
   .cookie('libelCourseApp', token, {
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 3,
-    sameSite: production ? 'none' : 'strict',
-    secure: production,
+    sameSite:'none',
+    secure: true,
   })
   .json({
     success: true,
@@ -29,8 +29,8 @@ const successLoginProvider = async (res, token, from ) => {
   .cookie('libelCourseApp', token, {
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 3,
-    sameSite: production ? 'none' : 'strict',
-    secure: production,
+    sameSite: 'none',
+    secure: true,
   })
   .redirect(frontend + from);
 }
