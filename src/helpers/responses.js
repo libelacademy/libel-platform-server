@@ -12,7 +12,7 @@ const successLogin = async (res, data, token ) => {
   res.status(200)
   .cookie('libelCourseApp', token, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 3,
+    expires:new Date(new Date().setDate(new Date().getDate() + 3)),
     sameSite:'none',
     secure: true,
   })
@@ -28,7 +28,7 @@ const successLoginProvider = async (res, token, from ) => {
   res.status(200)
   .cookie('libelCourseApp', token, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 3,
+    expires:new Date(new Date().setDate(new Date().getDate() + 3)),
     sameSite: 'none',
     secure: true,
   })
@@ -37,7 +37,12 @@ const successLoginProvider = async (res, token, from ) => {
 
 const successLogout = (res) => {
   res.status(200)
-  .clearCookie('libelCourseApp')
+  .cookie('libelCourseApp', '', {
+    httpOnly: true,
+    expires:new Date(),
+    sameSite: 'none',
+    secure: true,
+  })
   .json({
     success: true,
     message: 'Sesión cerrada',
