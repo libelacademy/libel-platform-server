@@ -38,7 +38,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.use('/v2', require('./routes'));
+app.use('/v1', require('./routes'));
 
 
 app.get('/', (req, res) => {
