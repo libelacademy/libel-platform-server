@@ -99,6 +99,7 @@ const update = async (req, res) => {
 
 const deleteById = async (req, res) => {
   try {
+    console.log
     const user = await User.findById(req.params.id);
     const file = await File.findOne({ url: user.avatar });
     if (file) {
