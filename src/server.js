@@ -22,7 +22,7 @@ connect();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors({
-  origin: ['https://libel.jceballos.com.co', 'http://libel.jceballos.com.co', 'http://localhost:3000', 'http://libel.jceballos.com.co:3000'],
+  origin: ['https://libel.jceballos.com.co', 'http://libel.jceballos.com.co', 'http://localhost:3000', 'http://localhost:3001', 'http://libel.jceballos.com.co:3000', 'https://plataforma.libel.academy'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
