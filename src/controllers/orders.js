@@ -12,7 +12,6 @@ const getAll = async (req, res) => {
         path: 'payer',
         model: 'User',
       })
-      .select('-password');
     success(res, orders);
   } catch (e) {
     error(res, e.message);
@@ -29,7 +28,6 @@ const getOne = async (req, res) => {
         path: 'payer',
         model: 'User',
       })
-      .select('-password');
     success(res, order);
   } catch (e) {
     error(res, e.message);

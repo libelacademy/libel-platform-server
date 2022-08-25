@@ -1,7 +1,7 @@
 /** @format */
 
 const { Course, Student, Order } = require('../models');
-// const paypal = require('paypal-rest-sdk');
+
 const request = require('request');
 const {
   paypal,
@@ -10,23 +10,13 @@ const {
   version,
   frontend,
 } = require('../config');
-// const base64 = require('base-64');
-const { default: axios } = require('axios');
 
-// paypal.configure({
-//   "mode": 'sandbox', //sandbox or live
-//   "client_id": paypalClientId,
-//   "client_secret": paypalSecret,
-// });
+const { default: axios } = require('axios');
 
 const authPaypal = {
   user: paypal.clientID,
   pass: paypal.clientSecret,
 };
-
-// const authEpayco = base64.encode(
-//   `${ePaycoPublicKey}:${ePaycoSecretKey}`
-// );
 
 const createPaypalPayment = async (req, res) => {
   const { courseId, coursePrice, courseName } = req.body;
@@ -50,23 +40,6 @@ const createPaypalPayment = async (req, res) => {
       cancel_url: `${hostname}/${version}/payments/cancel-payment/${courseId}`,
     },
   };
-
-  // request.post(
-  //   `${paypal.apipi}/v2/checkout/orders`,
-  //   {
-  //     auth: authPaypal,
-  //     body,
-  //     json: true,
-  //   },
-  //   (err, response) => {
-  //     console.log(response);
-  //     // const url = response.body.links.find(
-  //     //   (link) => link.rel === 'approve'
-  //     // ).href;
-  //     const url = true
-  //     res.json({ data: url });
-  //   }
-  // );
 
   try {
     const response = await axios.post(
@@ -102,6 +75,10 @@ const executePaypalPayment = async (req, res) => {
     async (err, response) => {
       const course = await Course.findById(courseId);
       const student = await Student.findOne({ user: userId });
+      if ( student.wishlist.includes(course._id) ) {
+        student.wishlist = student.wishlist.filter(id => id.toString() !== course._id.toString());
+        await student.save();
+      }
       student.enrollments.push({
         course: courseId,
         status: course.published ? 'process' : 'pending',
@@ -190,8 +167,12 @@ const executeEpaycoPayment = async (req, res) => {
     );
     const { x_transaction_state, x_id_factura } = response.data;
     if (x_transaction_state === 'Aceptada') {
+      if ( student.wishlist.includes(course._id) ) {
+        student.wishlist = student.wishlist.filter(id => id.toString() !== course._id.toString());
+        await student.save();
+      }
       student.enrollments.push({
-        course: courseId,
+        course: course._id,
         status: course.published ? 'process' : 'pending',
       });
       await student.save();
@@ -214,30 +195,6 @@ const executeEpaycoPayment = async (req, res) => {
     res.redirect(`${frontend}/cursos/${course.slug}`);
   }
 
-
-  // const courseId = req.params.courseId;
-  // const userId = req.params.userId;
-  // const course = await Course.findById(courseId);
-  // const student = await Student.findOne({ user: userId });
-
-  // if (x_transaction_state === 'Aceptada') {
-  //   student.enrollments.push({
-  //     course: courseId,
-  //   });
-  //   await student.save();
-  //   course.students.push(student.user);
-  //   await course.save();
-  //   const order = new Order({
-  //     student: student._id,
-  //     course: course._id,
-  //     paymentMethod: 'ePayco',
-  //     payer: userId,
-  //   });
-  //   await order.save();
-  //   res.redirect(`${frontend}/compra-exitosa/${order._id}`);
-  // } else {
-  //   res.redirect(`${frontend}/cursos/${course.slug}`);
-  // }
 };
 
 const cancelPayment = async (req, res) => {

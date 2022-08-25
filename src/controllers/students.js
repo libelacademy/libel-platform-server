@@ -1,7 +1,13 @@
 /** @format */
 
 const { error, success } = require('../helpers/responses');
-const { Lesson, Student, Course } = require('../models');
+const {
+  Lesson,
+  Student,
+  Course,
+  Certificate,
+  Order,
+} = require('../models');
 
 const completeLesson = async (req, res) => {
   try {
@@ -71,11 +77,15 @@ const addToWishlist = async (req, res) => {
     student.wishlist.push(courseId);
     await student.save();
 
-    success(res, {course: course._id}, 'Curso agregado a la lista de deseos.');
+    success(
+      res,
+      { course: course._id },
+      'Curso agregado a la lista de deseos.'
+    );
   } catch (e) {
     error(res, e.message);
   }
-}
+};
 
 const removeFromWishlist = async (req, res) => {
   try {
@@ -90,16 +100,20 @@ const removeFromWishlist = async (req, res) => {
     if (!course) {
       return error(res, 'El curso no existe.', 404);
     }
-
-    student.wishlist.filter((course) => course.toString() !== course._id.toString());
+    student.wishlist = student.wishlist.filter(
+      (wish) => wish.toString() !== course._id.toString()
+    );
     await student.save();
 
-    success(res, {course: course._id}, 'Curso eliminado de la lista de deseos.');
+    success(
+      res,
+      { course: course._id },
+      'Curso eliminado de la lista de deseos.'
+    );
   } catch (e) {
     error(res, e.message);
   }
-}
-
+};
 
 const leaveCourse = async (req, res) => {
   try {
@@ -115,18 +129,63 @@ const leaveCourse = async (req, res) => {
       return error(res, 'El curso no existe.', 404);
     }
 
-    student.enrollments.filter((enrollment) => enrollment.course.toString() !== course._id.toString());
+    student.enrollments.filter(
+      (enrollment) =>
+        enrollment.course.toString() !== course._id.toString()
+    );
     await student.save();
 
     success(res, course, 'Has avanzado al curso.');
   } catch (e) {
     error(res, e.message);
   }
-}
+};
+
+const getCerificates = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const student = await Student.findOne({ user: id });
+    if (!student) {
+      return error(res, 'El estudiante no registra.', 404);
+    }
+
+    const certificates = await Certificate.find({
+      student: student._id,
+    }).populate('course');
+
+    success(res, certificates, 'Certificados obtenidos.');
+  } catch (e) {
+    error(res, e.message);
+  }
+};
+
+const getInvoices = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const student = await Student.findOne({ user: id });
+    if (!student) {
+      return error(res, 'El estudiante no registra.', 404);
+    }
+
+    const invoices = await Order.find({ student: student._id })
+      .populate('student')
+      .populate('course')
+      .populate({
+        path: 'payer',
+        model: 'User',
+      });
+
+    success(res, invoices, 'Facturas obtenidas.');
+  } catch (e) {
+    error(res, e.message);
+  }
+};
 
 module.exports = {
   completeLesson,
   addToWishlist,
   removeFromWishlist,
-  leaveCourse
+  leaveCourse,
+  getCerificates,
+  getInvoices,
 };

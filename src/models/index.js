@@ -1,5 +1,6 @@
 const models = {
   Category: require('./category'),
+  Certificate: require('./certificate'),
   Course: require('./course'),
   Feedback: require('./feedback'),
   File: require('./file'),
