@@ -7,6 +7,7 @@ const router = Router();
 
 
 router.put('/complete-lesson', checkAuth, StudentController.completeLesson);
+router.put('/set-current-lesson', checkAuth, StudentController.setCurrentLesson);
 router.post('/wishlist', checkAuth, StudentController.addToWishlist);
 router.delete('/wishlist/:courseId', checkAuth, StudentController.removeFromWishlist);
 

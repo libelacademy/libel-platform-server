@@ -257,10 +257,39 @@ const addLesson = async (req, res) => {
     if (!course) {
       return error(res, 'Curso no encontrado.', 404);
     }
-    const lesson = await Lesson.create(req.body);
+    let lesson = {}
+    const lessons = await Lesson.find({ course: course._id });
+    if (lessons.length === 0) {
+      lesson = new Lesson({
+        ...req.body,
+        course: course._id,
+        previous: null,
+        next: null,
+        head: true,
+      });
+    } else {
+      const lastLesson = lessons.find((lesson) => lesson.head );
+      console
+      lesson = new Lesson({
+        ...req.body,
+        course: course._id,
+        previous: lastLesson._id,
+        next: null,
+        head: true,
+      });
+
+      await Lesson.findByIdAndUpdate(lastLesson._id, {
+        next: lesson._id,
+        head: false,
+      });
+    }
+
+    await lesson.save();
+
     course.lessons.push(lesson._id);
-    course.duration = course.duration + lesson.duration;
+    course.duration += lesson.duration;
     await course.save();
+
     return success(
       res,
       lesson,
@@ -268,6 +297,7 @@ const addLesson = async (req, res) => {
       201
     );
   } catch (e) {
+    console.log(e);
     error(res, e.message);
   }
 };
@@ -303,7 +333,25 @@ const deleteLesson = async (req, res) => {
     if (!lesson) {
       return error(res, 'Lección no encontrada.', 404);
     }
+    
+    const previous = await Lesson.findById(lesson.previous);
+    const next = await Lesson.findById(lesson.next);
+
+    if (!previous && next) {
+      next.previous = null;
+      await next.save(); 
+    } else if ( previous && next) {
+      previous.next = next._id;
+      await previous.save();
+      next.previous = previous._id;
+      await next.save();
+    } else if (previous && !next) {
+      previous.next = null;
+      await previous.save();
+    }
+
     await Lesson.findByIdAndDelete(lesson._id);
+
     course.lessons.splice(course.lessons.indexOf(lesson._id), 1);
     course.duration = course.duration - lesson.duration;
     await course.save();
@@ -393,9 +441,37 @@ const addFeedback = async (req, res) => {
     if (!course) {
       return error(res, 'Curso no encontrado.', 404);
     }
-    const feedback = await Feedback.create(req.body);
+    let feedback = {}
+    const feedbacks = await Feedback.find({ course: course._id });
+    if (feedbacks.length === 0) {
+      feedback = new Feedback({
+        ...req.body,
+        course: course._id,
+        previous: null,
+        next: null,
+        head: true,
+      });
+    } else {
+      const lastFeedback = feedbacks.find((lesson) => lesson.head );
+      feedback = new Feedback({
+        ...req.body,
+        course: course._id,
+        previous: lastFeedback._id,
+        nextLesson: null,
+        head: true,
+      });
+
+      await Feedback.findByIdAndUpdate(lastFeedback._id, {
+        next: feedback._id,
+        head: false,
+      });
+    }
+
+    await feedback.save();
+
     course.feedbacks.push(feedback._id);
     await course.save();
+
     return success(
       res,
       feedback,
@@ -438,11 +514,26 @@ const deleteFeedback = async (req, res) => {
     if (!feedback) {
       return error(res, 'Feedback no encontrado.', 404);
     }
+    
+    const previous = await Feedback.findById(feedback.previous);
+    const next = await Feedback.findById(feedback.next);
+
+    if (!previous && next) {
+      next.previous = null;
+      await next.save(); 
+    } else if ( previous && next) {
+      previous.next = next._id;
+      await previous.save();
+      next.previous = previous._id;
+      await next.save();
+    } else if (previous && !next) {
+      previous.next = null;
+      await previous.save();
+    }
+
     await Feedback.findByIdAndDelete(feedback._id);
-    course.feedbacks.splice(
-      course.feedbacks.indexOf(feedback._id),
-      1
-    );
+
+    course.feedbacks.splice(course.feedback.indexOf(feedback._id), 1);
     await course.save();
     return success(
       res,
@@ -581,6 +672,63 @@ const deleteReview = async (req, res) => {
   }
 };
 
+
+const enrollCourse = async (req, res) => {
+  try {
+      const { userId, courseId } = req.body;
+    const student = await Student.findOne({ user: userId });
+    if (!student) { return error(res, 'Estudiante no encontrado.', 404); }
+
+    const course = await Course.findById(courseId);
+    if (!course) { return error(res, 'Curso no encontrado.', 404); }
+
+    student.enrollments.push({
+      course: course._id
+    });
+    course.students.push(student._id);
+
+    await student.save();
+    await course.save();
+
+    const result = student.enrollments.find( enroll => enroll.course.toString() === course._id.toString());
+
+    return success( res, {student: student.user, enrollment: result}, 'Curso agregado correctamente.', 201 );
+
+  } catch (e) {
+    console.log(e);
+    error(res, e.message);
+  }
+}
+
+
+const unenrollCourse = async (req, res) => {
+  try {
+    console.log(req.params);
+    const { userId, courseId } = req.params;
+    const student = await Student.findOne({ user: userId });
+    if (!student) { return error(res, 'Estudiante no encontrado.', 404); }
+
+    const course = await Course.findById(courseId);
+    if (!course) { return error(res, 'Curso no encontrado.', 404); }
+
+    const enrollment = student.enrollments.find( enroll => enroll.course.toString() === course._id.toString());
+    if (!enrollment) { return error(res, 'No estas inscrito en este curso.', 404); }
+    student.enrollments.splice(student.enrollments.indexOf(enrollment._id), 1);
+    course.students.splice(course.students.indexOf(student._id), 1);
+   
+
+    await student.save();
+    await course.save();
+
+    return success( res, {student: student.user, enrollment }, 'Curso eliminado correctamente.', 200 );
+
+  } catch (e) {
+    console.log(e);
+    error(res, e.message);
+  }
+}
+
+
 module.exports = {
   getAll,
   getBySlug,
@@ -600,4 +748,6 @@ module.exports = {
   addReview,
   updateReview,
   deleteReview,
+  enrollCourse,
+  unenrollCourse
 };

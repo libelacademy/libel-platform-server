@@ -11,7 +11,7 @@ const {
 
 const completeLesson = async (req, res) => {
   try {
-    const { lessonId, slug } = req.body;
+    const { lessonId, slug, current } = req.body;
     const { id } = req.user;
     const student = await Student.findOne({ user: id });
     if (!student) {
@@ -45,20 +45,56 @@ const completeLesson = async (req, res) => {
         (enrollment) =>
           enrollment.course.toString() === course._id.toString()
       ).status = 'completed';
+      student.enrollments.find( (enrollment) => enrollment.course.toString() === course._id.toString()).completedAt = new Date();
       completed = true;
     }
+    student.enrollments.find( (enrollment) => enrollment.course.toString() === course._id.toString()).currentLesson = current;
 
     await student.save();
 
     success(
       res,
-      { lesson, completed },
+      { lesson, completed, current },
       'La clase ha sido completada.'
     );
   } catch (e) {
     error(res, e.message);
   }
 };
+
+const setCurrentLesson = async (req, res) => {
+  try {
+    const { lessonId, slug } = req.body;
+    const { id } = req.user;
+    const student = await Student.findOne({ user: id });
+    if (!student) {
+      return error(res, 'El estudiante no registra.', 404);
+    }
+
+    const course = await Course.findOne({ slug });
+    if (!course) {
+      return error(res, 'El curso no existe.', 404);
+    }
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return error(res, 'La clase no existe.', 404);
+    }
+
+    student.enrollments.find(
+      (enrollment) =>
+        enrollment.course.toString() === course._id.toString()
+    ).currentLesson = lessonId;
+    await student.save();
+
+    success(
+      res,
+      { lesson },
+      'La clase ha sido completada.'
+    );
+  } catch (e) {
+    error(res, e.message);
+  }
+}
 
 const addToWishlist = async (req, res) => {
   try {
@@ -183,6 +219,7 @@ const getInvoices = async (req, res) => {
 
 module.exports = {
   completeLesson,
+  setCurrentLesson,
   addToWishlist,
   removeFromWishlist,
   leaveCourse,

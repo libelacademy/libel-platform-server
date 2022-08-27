@@ -1,6 +1,7 @@
 const controllers = {
   AuthController: require('./auth'),
   CategoryController: require('./categories'),
+  CertificateController: require('./certificates'),
   CourseController: require('./courses'),
   FileController: require('./files'),
   OrderController: require('./orders'),
