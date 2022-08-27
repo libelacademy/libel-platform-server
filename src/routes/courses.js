@@ -30,5 +30,7 @@ router.post('/:courseId/reviews', checkAuth, CourseController.addReview);
 router.put('/:courseId/reviews/:reviewId', checkAuth, CourseController.updateReview);
 router.delete('/:courseId/reviews/:reviewId', checkAuth, CourseController.deleteReview);
 
+router.post('/enrollments', CourseController.enrollCourse);
+router.delete('/enrollments/:courseId/:userId', CourseController.unenrollCourse);
 
 module.exports = router;
